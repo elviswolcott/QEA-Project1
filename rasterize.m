@@ -44,7 +44,7 @@ function img = rasterize(points, img_size)
     
 	% Centering
 	edge_target = floor((img_size - actual_dimensions(smallest_axis_idx)) / 2);
-	edge_offset = edge_target - min(points(:, smallest_axis_idx));
+	edge_offset = 1 + edge_target - min(points(:, smallest_axis_idx));
 	shifts(smallest_axis_idx) = edge_offset;
 
 	points = points + shifts

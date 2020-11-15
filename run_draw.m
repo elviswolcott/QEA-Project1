@@ -51,20 +51,16 @@ function [label, match] = run_draw(model)
         
         pending_strokes = points(processed_upto:last_stroke_end, :);
         new_stroke = points((last_stroke_end + 1):end, :);
-        pending_coords = min(pending_strokes)
-        pending_dims = max(pending_strokes) - min(pending_strokes)
-        new_coords = min(new_stroke)
-        new_dims = max(pending_strokes) - min(pending_strokes)
         
-        pending_rect = [pending_coords, pending_dims]
-        new_rect = [new_coords, new_dims]
+        pending_mins = min(pending_strokes)
+        pending_maxes = max(pending_strokes)
+        new_mins = min(new_stroke)
+        new_maxes = max(new_stroke)
         
-        done_with_stroke = rectint(pending_rect, new_rect) == 0
         
-       	disp("StrokeEnd:");
-        disp(pending_rect);
-        disp(new_rect);
-        disp(done_with_stroke);
+        done_with_stroke = ...
+            (pending_maxes(1) < new_mins(1) || pending_mins(1) > new_maxes(1)) || ...
+            (pending_maxes(2) < new_mins(2) || pending_mins(2) > new_maxes(2));
         
         if done_with_stroke
             [success, label] = process_char(pending_strokes);
