@@ -2,7 +2,7 @@
 % This function accepts a model and an image, then projects the image onto
 % the model's eigenvectors and finds its nearest neighbor, returning the
 % label and the match index.
-function [label, match] = recognize(model, img)
+function [label, match, success] = recognize(model, img)
     %% Image Preprocessing
     % The nice thing about reshaping here is that it works even if the
     % image has already been reshaped.
@@ -12,6 +12,9 @@ function [label, match] = recognize(model, img)
     img_projected = model.eigenvectors' * img;
     
     %% Matching and Labeling
-    match = knnsearch(model.training_imgs_projected', img_projected');
+    [match, distance] = knnsearch(model.training_imgs_projected', img_projected');
+    
+    fprintf("KNNSearch Distance: %1.2f\n", distance);
+    success = true; % TODO
     label = model.training_labels(match);
 end

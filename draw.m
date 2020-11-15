@@ -1,6 +1,10 @@
 % This is a helper tool that lets you draw into MATLAB, then returns the
 % points as a matrix
-function data = draw(instructions)
+function data = draw(instructions, onStrokeEnd)
+    if nargin < 2
+        onStrokeEnd = @(data) [] % no op
+    end
+
     clf;
 
     X_MIN = 1;
@@ -24,8 +28,7 @@ function data = draw(instructions)
     % For some reason, the  first data point is always (0, 0), so we
     % ignore it and wait for subsequent points.
     skippedFirstDataPoint = false;
-    x_data = [];
-    y_data = [];
+    data = [];
 
     ink = line('XData', 0, 'YData', 0, 'Marker', '.', 'color', 'k', 'LineWidth', 4);
     
@@ -45,7 +48,6 @@ function data = draw(instructions)
         elseif strcmp(selectionType, 'alt')
             src.Pointer = 'arrow';
             penDown = false;
-            data = [x_data', y_data'];
             close(drawing);
         end
     end
@@ -56,13 +58,16 @@ function data = draw(instructions)
         end
         
         curPoint = curAxes.CurrentPoint;
-        if skippedFirstDataPoint
-            x_data(end + 1) = curPoint(1, 1);
-            y_data(end + 1) = curPoint(1, 2);
+        if (skippedFirstDataPoint == true)
+            data(end + 1, :) = curPoint(1, 1:2);
         end
+        
         skippedFirstDataPoint = true;
-        ink.XData = x_data;
-        ink.YData = y_data;
+        
+        if size(data, 1) >= 1
+            ink.XData = data(:, 1);
+            ink.YData = data(:, 2);
+        end
         xlim([Y_MIN Y_MAX])
         ylim([Y_MIN Y_MAX])
     end
@@ -71,8 +76,9 @@ function data = draw(instructions)
         if ~penDown
             return
         end
-        x_data(end + 1) = NaN;
-        y_data(end + 1) = NaN;
+        data(end + 1, :) = [NaN, NaN];
         penDown = false;
+        disp("HERE1");
+        onStrokeEnd(data);
     end
 end
