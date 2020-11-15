@@ -10,35 +10,35 @@ function [label, match] = run_draw(model)
 	%% Drawing
     points = draw("Draw a Mathematical Character or Symbol:", @on_stroke_end);
 	
-    %% Rasterization
-    img = rasterize(points, 45);
-
-    %% Sanity Check: Display Rasterized Image
-	figure; 
-    imshow(img);
-    title("You drew:");
+%     %% Rasterization
+%     img = rasterize(points, 45);
+% 
+%     %% Sanity Check: Display Rasterized Image
+% 	figure; 
+%     imshow(img);
+%     title("You drew:");
+%     
+%     %% Character Recognition
+% 	[label, match] = recognize(model, img);
+% 
+%     %% Output
+%     title(sprintf("You drew a %s (#%1.0f):", label, match));
+% 	fprintf("You drew a %s (#%1.0f)!\n", label, match);
     
-    %% Character Recognition
-	[label, match] = recognize(model, img);
-
-    %% Output
-    title(sprintf("You drew a %s (#%1.0f):", label, match));
-	fprintf("You drew a %s (#%1.0f)!\n", label, match);
-    
-    function success=process_char(points)
+    function [success, label] = process_char(points)
         %% Rasterization
         img = rasterize(points, 45);
 
         %% Sanity Check: Display Rasterized Image
-        figure; 
-        imshow(img);
-        title("You drew:");
+        %figure; 
+        %imshow(img);
+        %title("You drew:");
 
         %% Character Recognition
         [label, match, success] = recognize(model, img);
 
         %% Output
-        title(sprintf("You drew a %s (#%1.0f):", label, match));
+        %title(sprintf("You drew a %s (#%1.0f):", label, match));
         fprintf("You drew a %s (#%1.0f)!\n", label, match);
     end
     
@@ -67,7 +67,15 @@ function [label, match] = run_draw(model)
         disp(done_with_stroke);
         
         if done_with_stroke
-            process_char(pending_strokes)
+            [success, label] = process_char(pending_strokes);
+            
+            coords = min(pending_strokes)
+            dimensions = range(pending_strokes)
+            position = [coords dimensions]
+            
+            rectangle('Position', position, "EdgeColor", "red", "LineWidth", 2);
+            
+            text(coords(1) + (dimensions(1) / 2), coords(2) - 2, label, "FontSize", 12, "Color", "red", "HorizontalAlignment", "center");
             processed_upto = last_stroke_end;
         end
         

@@ -5,15 +5,13 @@ function data = draw(instructions, onStrokeEnd)
         onStrokeEnd = @(data) [] % no op
     end
 
-    clf;
-
     X_MIN = 1;
     X_MAX = 45;
     
     Y_MIN = 1;
     Y_MAX = 45;
     
-    drawing = figure("WindowButtonDownFcn", @onBtnDown);
+    drawing = figure("WindowButtonDownFcn", @onBtnDown); clf;
     % These don't seem to work, so we do it in onBtnDown
     %figure("WindowButtonMotionFcn", @onMove)
     %figure("WindowButtonUpFcn", @onBtnUp)
@@ -23,7 +21,7 @@ function data = draw(instructions, onStrokeEnd)
     hold on;
     
     curAxes = axes('SortMethod', 'childorder'); % not entirely sure what this does
-    title(instructions)
+    title(instructions);
     
     % For some reason, the  first data point is always (0, 0), so we
     % ignore it and wait for subsequent points.
@@ -78,7 +76,6 @@ function data = draw(instructions, onStrokeEnd)
         end
         data(end + 1, :) = [NaN, NaN];
         penDown = false;
-        disp("HERE1");
         onStrokeEnd(data);
     end
 end

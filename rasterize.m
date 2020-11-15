@@ -30,9 +30,9 @@ function img = rasterize(points, img_size)
 	shifts = [0, 0]; % Later used to shift all pixels
 
 	% Scaling
-	actual_dimensions = range(points);
-	[~, largest_axis_idx] = max(actual_dimensions);
-	[~, smallest_axis_idx] = min(actual_dimensions);
+	actual_dimensions = range(points)
+	[~, largest_axis_idx] = max(actual_dimensions)
+	[~, smallest_axis_idx] = min(actual_dimensions)
     % img_size - 1 avoids ending up with pixels at index 0.
 	scale_factor = (img_size - 1) / actual_dimensions(largest_axis_idx);
 	points = points .* scale_factor;
@@ -47,7 +47,9 @@ function img = rasterize(points, img_size)
 	edge_offset = edge_target - min(points(:, smallest_axis_idx));
 	shifts(smallest_axis_idx) = edge_offset;
 
-	points = points + shifts;
+	points = points + shifts
+    
+    points = round(points, 10);
     
     %% Sanity Check
     mins = min(points);
@@ -55,7 +57,7 @@ function img = rasterize(points, img_size)
     assert(...
         all(maxes <= img_size) && all(mins >= 1), ...
         sprintf(...
-            "Sanity Check Failed! Failed to scale and center image so all points were within (%1.0f, %1.0f)! Mins: (%1.2f, %1.2f), Maxes: (%1.2f, %1.2f)", ...
+            "Sanity Check Failed! Failed to scale and center image so all points were within (%1.2f, %1.2f)! Mins: (%1.2f, %1.2f), Maxes: (%1.2f, %1.2f)", ...
             img_size, img_size, mins(1), mins(2), maxes(1), maxes(2) ...
         ) ...
     );
