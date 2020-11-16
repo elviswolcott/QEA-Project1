@@ -27,18 +27,13 @@ function [label, match_idx] = run_draw(model)
         new_points = points((last_stroke_end + 1):end, :);
         
         %% Detect Stroke Overlap
-        % We assume that a single character (for PCA purposes) is any
-        % number of strokes whose bounding boxes ovelap. Therefore, we
-        % can't process a stroke(s) until we know that the following stroke
-        % doesn't overlap.
-        pending_mins = min(pending_points);
-        pending_maxes = max(pending_points);
-        new_mins = min(new_points);
-        new_maxes = max(new_points);
+        % We split symbols by vertical gaps along the x-axis, assuming that
+        % the user writes left to right.
+        pending_max = max(pending_points(:, 1));
+        new_min = min(new_points(:, 1));
+        required_gap = 2;
         
-        done_with_symbol = ...
-            (pending_maxes(1) < new_mins(1) || pending_mins(1) > new_maxes(1)) || ...
-            (pending_maxes(2) < new_mins(2) || pending_mins(2) > new_maxes(2));
+        done_with_symbol = (pending_max + required_gap) < new_min;
         
         if ~done_with_symbol
             last_stroke_end = size(points, 1);
@@ -46,7 +41,7 @@ function [label, match_idx] = run_draw(model)
         end
         
         %% Character Recognition
-        [label, match_idx, success] = recognize(model, img);
+        [success, label, match_idx] = recognize(model, pending_points);
 
         %% Output
         fprintf("You drew a %s (#%1.0f)!\n", label, match_idx);
