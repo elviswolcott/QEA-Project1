@@ -7,9 +7,15 @@ function [label, match_idx] = run_draw(model)
     processed_upto = 1;
     last_stroke_end = 1;
     
+    recognized_labels = string();
+    
 	%% Begin Drawing
     start_draw("Draw Some Math:", @on_stroke_end);
-    title("You Drew:");
+    
+    %% Handle Result
+    recognized_text = join(recognized_labels, "");
+    title(strcat("You Wrote: ", recognized_text));
+    clipboard("copy", recognized_text);
     
     function on_stroke_end(points, is_final)
         %% Initial Condition: return if it's the first stroke
@@ -65,7 +71,10 @@ function [label, match_idx] = run_draw(model)
         [success, label, match_idx] = recognize(model, points);
         
         if success
-            fprintf("You drew a %s (#%1.0f)!\n", label, match_idx);
+            recognized_labels(end + 1) = label;
+            recognized_string = join(recognized_labels, "");
+            fprintf("You drew a %s (#%1.0f): %s\n", label, match_idx, recognized_string);
+            title(recognized_string);
         else
             label = "???";
             match_idx = -1;
@@ -76,11 +85,11 @@ function [label, match_idx] = run_draw(model)
         dimensions = range(points);
         position = [coords dimensions];
 
-        if success; color = "green"; else; color = "red"; end
+        if success; color = [0, 0.8, 0]; else; color = "red"; end
 
         rectangle('Position', position, "EdgeColor", color, "LineWidth", 2);
         
-        text(coords(1) + (dimensions(1) / 2), coords(2) - 2, label, ...
-            "FontSize", 12, "Color", color, "HorizontalAlignment", "center");
+        text(coords(1) + (dimensions(1) / 2), coords(2) - 75, label, ...
+            "FontSize", 25, "Color", color, "HorizontalAlignment", "center");
     end
 end

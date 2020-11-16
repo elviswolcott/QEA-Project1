@@ -10,7 +10,7 @@
 function img = rasterize(points, img_size)
 	%% Configuration
 	STROKE_COLOR = 0;
-	BACKGROUND_COLOR = 255;
+	BACKGROUND_COLOR = 1;
 
 	% This is used to figure out how many steps to make per pixel of
     % difference in end points when drawing strokes. For example, if this
@@ -30,9 +30,9 @@ function img = rasterize(points, img_size)
 	shifts = [0, 0]; % Later used to shift all pixels
 
 	% Scaling
-	actual_dimensions = range(points)
-	[~, largest_axis_idx] = max(actual_dimensions)
-	[~, smallest_axis_idx] = min(actual_dimensions)
+	actual_dimensions = range(points);
+	[~, largest_axis_idx] = max(actual_dimensions);
+	[~, smallest_axis_idx] = min(actual_dimensions);
     % img_size - 1 avoids ending up with pixels at index 0.
 	scale_factor = (img_size - 1) / actual_dimensions(largest_axis_idx);
 	points = points .* scale_factor;
@@ -47,7 +47,7 @@ function img = rasterize(points, img_size)
 	edge_offset = 1 + edge_target - min(points(:, smallest_axis_idx));
 	shifts(smallest_axis_idx) = edge_offset;
 
-	points = points + shifts
+	points = points + shifts;
     
     points = round(points, 10);
     
