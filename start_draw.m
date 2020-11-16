@@ -1,6 +1,6 @@
 % This is a helper tool that lets you draw into MATLAB, then returns the
 % points as a matrix
-function data = start_draw(instructions, on_stroke_end)
+function data = start_draw(draw_title, on_stroke_end)
     if nargin < 2
         on_stroke_end = @(data) []; % no op
     end
@@ -13,7 +13,13 @@ function data = start_draw(instructions, on_stroke_end)
     
     baseline_inset = (Y_MAX - Y_MIN) * .15;
     
-    drawing = figure("WindowButtonDownFcn", @onBtnDown); clf;
+    % As best I can tell, MATLAB's `waitfor` only works to wait for a
+    % drawing to close. However, we don't actually want to close the main
+    % drawing when we're done. So, we have this drawing that's hidden which
+    % we use exclusively as a handle to `waitfor`.
+    wait_drawing = figure("Name", "Ignore Me", "visible", "off");
+    
+    figure("Name", draw_title, "WindowButtonDownFcn", @onBtnDown); clf;
     % These don't seem to work, so we do it in onBtnDown
     %figure("WindowButtonMotionFcn", @onMove)
     %figure("WindowButtonUpFcn", @onBtnUp)
@@ -26,7 +32,7 @@ function data = start_draw(instructions, on_stroke_end)
     hold on;
     
     cur_axes = gca; %axes('SortMethod', 'childorder'); % not entirely sure what this does
-    title(instructions);
+    title(draw_title);
     
     % For some reason, the  first data point is always (0, 0), so we
     % ignore it and wait for subsequent points.
@@ -42,7 +48,7 @@ function data = start_draw(instructions, on_stroke_end)
     
     pen_down = false;
     
-    waitfor(drawing); % wait until the figure is closed to return
+    waitfor(wait_drawing); % wait until the figure is closed to return
     
     % See https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html#buiwuyk-1-WindowButtonMotionFcn
     function onBtnDown(src, ~)
@@ -54,9 +60,20 @@ function data = start_draw(instructions, on_stroke_end)
             src.Pointer = 'circle';
             pen_down = true;
         elseif strcmp(selectionType, 'alt')
+            %% Update State
             src.Pointer = 'arrow';
             pen_down = false;
-            close(drawing);
+            
+            %% Clear Event Handlers to Disable Drawing
+            src.WindowButtonMotionFcn = @(~, ~) [];
+            src.WindowButtonUpFcn = @(~, ~) [];
+            src.WindowButtonDownFcn = @(~, ~) [];
+            
+            %% Flush Data
+            on_stroke_end(data, true);
+            
+            %% Make the Original Call to `start_draw` Return
+            close(wait_drawing);
         end
     end
 
@@ -86,6 +103,6 @@ function data = start_draw(instructions, on_stroke_end)
         end
         data(end + 1, :) = [NaN, NaN];
         pen_down = false;
-        on_stroke_end(data);
+        on_stroke_end(data, false);
     end
 end

@@ -5,16 +5,17 @@
 % figure.
 function [label, match_idx] = run_draw(model)
     processed_upto = 1;
-    last_stroke_end = -1;
+    last_stroke_end = 1;
     
 	%% Begin Drawing
     start_draw("Draw Some Math:", @on_stroke_end);
+    title("You Drew:");
     
-    function on_stroke_end(points)
+    function on_stroke_end(points, is_final)
         %% Initial Condition: return if it's the first stroke
         % Since we only process Stroke N when Stroke N+1 has been rendered
         % and doesn't overlap, we never process on the first stroke.
-        if last_stroke_end == -1
+        if ~is_final && last_stroke_end == 1
             last_stroke_end = size(points, 1);
             return
         end
@@ -35,30 +36,51 @@ function [label, match_idx] = run_draw(model)
         
         done_with_symbol = (pending_max + required_gap) < new_min;
         
-        if ~done_with_symbol
+        % If this is final data, we need to process it even if it doesn't
+        % look done.
+        if ~is_final && ~done_with_symbol
             last_stroke_end = size(points, 1);
             return
         end
         
-        %% Character Recognition
-        [success, label, match_idx] = recognize(model, pending_points);
+        %% Process Points
+        % If we think that we've finished a symbol, we'll try processing
+        % it. If that fails (which means the projection was too far from
+        % eigenspace, meaning that the drawn symbol wasn't a lot like
+        % anything we've seen before), we don't mark those strokes as
+        % processed, and we'll try processing it again on the next stroke.
+        % NOTE: I'm not sure this is the correct thing to do, because if
+        % there's a malformed symbol it will never match and will get
+        % stuck.
+        if process_points(pending_points)
+            processed_upto = last_stroke_end;
+        end
+        
+        %% Update State
+        last_stroke_end = size(points, 1);
+    end
 
-        %% Output
-        fprintf("You drew a %s (#%1.0f)!\n", label, match_idx);
+    function success = process_points(points)
+        %% Character Recognition
+        [success, label, match_idx] = recognize(model, points);
+        
+        if success
+            fprintf("You drew a %s (#%1.0f)!\n", label, match_idx);
+        else
+            label = "???";
+            match_idx = -1;
+        end
 
         %% Draw Results on Figure
-        coords = min(pending_points);
-        dimensions = range(pending_points);
+        coords = min(points);
+        dimensions = range(points);
         position = [coords dimensions];
 
         if success; color = "green"; else; color = "red"; end
 
         rectangle('Position', position, "EdgeColor", color, "LineWidth", 2);
+        
         text(coords(1) + (dimensions(1) / 2), coords(2) - 2, label, ...
             "FontSize", 12, "Color", color, "HorizontalAlignment", "center");
-        
-        %% Update State
-        processed_upto = last_stroke_end;
-        last_stroke_end = size(points, 1);
     end
 end
