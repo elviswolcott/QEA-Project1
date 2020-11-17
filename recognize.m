@@ -12,7 +12,10 @@ function [success, label, match] = recognize(model, points)
     img_projected = model.eigenvectors' * img;
     
     %% Matching and Labeling
-    [match, distance] = knnsearch(model.training_imgs_projected', img_projected');
+    [match, distance] = knnsearch(model.training_imgs_projected', img_projected')
+    
+    matchreal = model.training_imgs_projected(:, match)
+    testreal = img_projected
     
     success = true; % TODO
     label = model.training_labels(match);

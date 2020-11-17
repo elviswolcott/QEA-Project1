@@ -3,20 +3,23 @@
 % user to draw on a figure, then runs segmentation, runs PCA on each
 % segmented symbol, and outputs the result of segmentation back to the
 % figure.
-function [label, match_idx] = run_draw(model)
+function [label, match_idx] = main(model)
     processed_upto = 1;
     last_stroke_end = 1;
     
     recognized_labels = string();
     
 	%% Begin Drawing
-    start_draw("Draw Some Math:", @on_stroke_end);
+    draw("Draw Some Math:", @on_stroke_end);
+    % NOTE: draw doesn't return until the user is finished drawing. It
+    % does, however, invoke `on_stroke_end` regularly during drawing.
     
-    %% Handle Result
+    %% One Drawing is Done: Handle Result
     recognized_text = join(recognized_labels, "");
     title(strcat("You Wrote: ", recognized_text));
     clipboard("copy", recognized_text);
     
+    %% Stroke Processing
     function on_stroke_end(points, is_final)
         %% Initial Condition: return if it's the first stroke
         % Since we only process Stroke N when Stroke N+1 has been rendered
@@ -44,7 +47,7 @@ function [label, match_idx] = run_draw(model)
         
         % If this is final data, we need to process it even if it doesn't
         % look done.
-        if ~is_final && ~done_with_symbol
+        if size(pending_points, 1) <= 2 || (~is_final && ~done_with_symbol) 
             last_stroke_end = size(points, 1);
             return
         end
@@ -66,6 +69,7 @@ function [label, match_idx] = run_draw(model)
         last_stroke_end = size(points, 1);
     end
 
+    %% Recognition
     function success = process_points(points)
         %% Character Recognition
         [success, label, match_idx] = recognize(model, points);
@@ -89,7 +93,7 @@ function [label, match_idx] = run_draw(model)
 
         rectangle('Position', position, "EdgeColor", color, "LineWidth", 2);
         
-        text(coords(1) + (dimensions(1) / 2), coords(2) - 75, label, ...
+        text(coords(1) + (dimensions(1) / 2), coords(2) - 25, label, ...
             "FontSize", 25, "Color", color, "HorizontalAlignment", "center");
     end
 end

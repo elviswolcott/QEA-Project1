@@ -1,14 +1,14 @@
 % This is a helper tool that lets you draw into MATLAB, then returns the
 % points as a matrix
-function data = start_draw(draw_title, on_stroke_end)
+function points = draw(draw_title, on_stroke_end)
     if nargin < 2
         on_stroke_end = @(data) []; % no op
     end
 
-    X_MIN = 0;
+    X_MIN = 1;
     X_MAX = 2000;
     
-    Y_MIN = 0;
+    Y_MIN = 1;
     Y_MAX = 500;
     
     baseline_inset = (Y_MAX - Y_MIN) * .15;
@@ -19,17 +19,19 @@ function data = start_draw(draw_title, on_stroke_end)
     % we use exclusively as a handle to `waitfor`.
     wait_drawing = figure("Name", "Ignore Me", "visible", "off");
     
-    figure("Name", draw_title, "WindowButtonDownFcn", @onBtnDown); clf;
+    drawing = figure("Name", draw_title, "WindowButtonDownFcn", @onBtnDown); clf;
+    hold on;
     % These don't seem to work, so we do it in onBtnDown
     %figure("WindowButtonMotionFcn", @onMove)
     %figure("WindowButtonUpFcn", @onBtnUp)
-
-    pbaspect([(X_MAX - X_MIN) / (Y_MAX - Y_MIN), 1, 1]);
-    axis([X_MIN X_MAX Y_MIN Y_MAX]);
-    xlim([Y_MIN Y_MAX]);
+    
+    drawing_pos = get(drawing, 'Position');
+    
+    set(drawing, 'Position', [drawing_pos(1:2), X_MAX - X_MIN, Y_MAX - Y_MIN]);
+    
+    xlim([X_MIN X_MAX]);
     ylim([Y_MIN Y_MAX]);
     
-    hold on;
     
     cur_axes = gca; %axes('SortMethod', 'childorder'); % not entirely sure what this does
     title(draw_title);
@@ -37,13 +39,13 @@ function data = start_draw(draw_title, on_stroke_end)
     % For some reason, the  first data point is always (0, 0), so we
     % ignore it and wait for subsequent points.
     skipped_first_point = false;
-    data = [];
+    points = [];
     
     line('XData', [0, X_MAX + 1], 'YData', [Y_MIN + baseline_inset, Y_MIN + baseline_inset], 'Color', [0.7, 0.7, 0.7], 'LineWidth', 2);
 
     ink = line('XData', 0, 'YData', 0, 'Marker', '.', 'color', 'k', 'LineWidth', 4);
     
-    xlim([Y_MIN Y_MAX]);
+    xlim([X_MIN X_MAX]);
     ylim([Y_MIN Y_MAX]);
     
     pen_down = false;
@@ -70,7 +72,7 @@ function data = start_draw(draw_title, on_stroke_end)
             src.WindowButtonDownFcn = @(~, ~) [];
             
             %% Flush Data
-            on_stroke_end(data, true);
+            on_stroke_end(points, true);
             
             %% Make the Original Call to `start_draw` Return
             close(wait_drawing);
@@ -84,16 +86,16 @@ function data = start_draw(draw_title, on_stroke_end)
         
         curPoint = cur_axes.CurrentPoint;
         if (skipped_first_point == true)
-            data(end + 1, :) = curPoint(1, 1:2);
+            points(end + 1, :) = curPoint(1, 1:2);
         end
         
         skipped_first_point = true;
         
-        if size(data, 1) >= 1
-            ink.XData = data(:, 1);
-            ink.YData = data(:, 2);
+        if size(points, 1) >= 1
+            ink.XData = points(:, 1);
+            ink.YData = points(:, 2);
         end
-        xlim([Y_MIN Y_MAX])
+        xlim([X_MIN X_MAX])
         ylim([Y_MIN Y_MAX])
     end
 
@@ -101,8 +103,8 @@ function data = start_draw(draw_title, on_stroke_end)
         if ~pen_down
             return
         end
-        data(end + 1, :) = [NaN, NaN];
+        points(end + 1, :) = [NaN, NaN];
         pen_down = false;
-        on_stroke_end(data, false);
+        on_stroke_end(points, false);
     end
 end

@@ -3,7 +3,7 @@
 % `labels`, generate and return a model with `num_eigenvectors` eigenvectors. 
 function model = train_model(imgs, labels, num_eigenvectors)
     %% Image Preprocessing
-    imgs = imgs - mean(mean(imgs));
+    %imgs = imgs - mean(mean(imgs));
     
     %% PCA
     imgs_cov = cov(imgs);
