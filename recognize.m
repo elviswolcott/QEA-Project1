@@ -7,9 +7,7 @@ function [success, label, match] = recognize(model, points)
     %% Rasterization
     img = rasterize(points, 45);
     
-    figure; imagesc(img);
-    
-    img = reshape(img, [size(img, 1) * size(img, 2), 1])
+    img = reshape(img, [size(img, 1) * size(img, 2), 1]);
     
     
     
@@ -17,8 +15,8 @@ function [success, label, match] = recognize(model, points)
     img_projected = model.eigenvectors' * img;
     
     %% Matching and Labeling
-    match = knnsearch(model.training_imgs_projected', img_projected')
+    [match, distance] = knnsearch(model.training_imgs_projected', img_projected')
     
     success = true; % TODO
-    label = model.training_labels(match)
+    label = model.training_labels(match);
 end

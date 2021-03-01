@@ -16,7 +16,7 @@ function [label, match_idx] = main(model)
     
     %% One Drawing is Done: Handle Result
     recognized_text = join(recognized_labels, "");
-    title(strcat("You Wrote: ", recognized_text));
+    title(sprintf("You Wrote: %s", recognized_text));
     clipboard("copy", recognized_text);
     
     %% Stroke Processing
@@ -55,8 +55,8 @@ function [label, match_idx] = main(model)
         %% Process Points
         % If we think that we've finished a symbol, we'll try processing
         % it. If that fails (which means the projection was too far from
-        % eigenspace, meaning that the drawn symbol wasn't a lot like
-        % anything we've seen before), we don't mark those strokes as
+        % eigens    pace, meaning that the drawn symbol wasn't a lot like
+        % anything we've seen before), we don't mark those strokes as`
         % processed, and we'll try processing it again on the next stroke.
         % NOTE: I'm not sure this is the correct thing to do, because if
         % there's a malformed symbol it will never match and will get
